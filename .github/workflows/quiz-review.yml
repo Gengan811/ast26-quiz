@@ -1,17 +1,20 @@
 name: Quiz Review
 on:
-  pull_request:
+  pull_request_target:
     paths: ['docs/**/quiz/q-*.yaml']
 
 permissions:
   contents: read
   pull-requests: write
+  issues: write
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
       - uses: actions/setup-node@v4
         with:
@@ -44,6 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
@@ -63,6 +67,7 @@ jobs:
         run: node scripts/claude-review.js ${{ steps.changed.outputs.all_changed_files }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
 
       - name: Post Claude review results
         if: always() && steps.changed.outputs.any_changed == 'true'
